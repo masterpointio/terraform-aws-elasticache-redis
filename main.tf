@@ -111,6 +111,17 @@ resource "aws_elasticache_replication_group" "default" {
     }
   }
 
+  # NOTE: This addresses an issue with supplying cluster_mode_enabled where
+  # number_cache_clusters is computed, but we're continuing to set 0 Terraform
+  # throws an error if number_cache_clusters + cluster_mode are both supplied.
+  # https://www.terraform.io/docs/providers/aws/r/elasticache_replication_group.html#redis-cluster-mode-disabled
+  dynamic "lifecycle" {
+    for_each = var.cluster_mode_enabled ? ["true"] : []
+
+    content {
+      ignore_changes = [ "number_cache_clusters" ]
+    }
+  }
 }
 
 #
